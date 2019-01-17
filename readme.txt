@@ -33,6 +33,8 @@
 					http://shop62057469.taobao.com
 					公司网站：www.alientek.com
 					技术论坛：www.openedv.com
-					
-					
+	以前我是把控制电流值直接与速度进行pid计算。今天，正确理解PID计算。
+	对应输出电流值。				
+	没有正确理解电流值与转速的关系
+				
 					

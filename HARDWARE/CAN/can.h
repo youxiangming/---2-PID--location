@@ -22,16 +22,19 @@ u8 CAN1_Mode_Init(u8 tsjw,u8 tbs2,u8 tbs1,u16 brp,u8 mode);//CAN初始化
  
 void CAN1_Send_Msg(s8* msg,s8 len);						//发送数据
 
-void Motor_Send_analysis(void);
+void Motor_Speed_Send_analysis(void);
 
+float Location_PID_Change(void);
+	
 typedef struct{
 	u16 motor_angle;
 	s16 motor_speed;
 	s16 motor_dianliu;
 	s16 motor_temperature;
+	u16 motor_real_angle;
 } Motor_Nature;
 void Date_recieve_analysis(void);
-float	PID_Change(void);
+float	Speed_PID_Change(float target,s16 real_speed);
 #endif
 
 

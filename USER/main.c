@@ -18,7 +18,6 @@ int main(void)
 	KEY_Init(); 			  
 	CAN1_Mode_Init(CAN_SJW_1tq,CAN_BS2_6tq,CAN_BS1_7tq,3,CAN_Mode_Normal);//1M
  	TIM3_Int_Init(200-1,420-1);
-	MOtor_Init(-1000);
 	while(1); 
 }
 

@@ -6,7 +6,12 @@
 	CanRxMsg RxMessage;
 	Motor_Nature Motor_base;
 	s8 Send[8];	
-	int Output;
+	float Output;
+	u16 Full_angle=360;
+	u16 Full_range=8191;
+	s16 angle_error;
+	s16 angle_old_error=0;
+	float Out_Speed;
 u8 CAN1_Mode_Init(u8 tsjw,u8 tbs2,u8 tbs1,u16 brp,u8 mode)
 {
 
@@ -91,36 +96,46 @@ void CAN1_Send_Msg(s8*msg,s8 len)
 	mbox= CAN_Transmit(CAN1, &TxMessage);   
   while((CAN_TransmitStatus(CAN1, mbox)==CAN_TxStatus_Failed)&&(i<0XFFF))i++;	//等待发送结束
 }
-void Date_recieve_analysis(void){
+void Date_recieve_analysis(void)
+{
 	Motor_base.motor_angle=(u16)((RxMessage.Data[0]<<8)|RxMessage.Data[1]);
 	Motor_base.motor_speed=(s16)((RxMessage.Data[2]<<8)|RxMessage.Data[3]);
 	Motor_base.motor_dianliu=(s16)((RxMessage.Data[4]<<8)|RxMessage.Data[5]);
 	Motor_base.motor_temperature=(s16)RxMessage.Data[6];
 }
 s16 Old_error,error,n=0;
-s16 target;	s16 real;
-float	PID_Change(void){
-	float Kp=4.83;
-	float Ki=4.454,Kd=0.011;
-	target=-1000;
-	real=Motor_base.motor_speed;
-	if(real>1500)	return 1500;
-	error=target-real;
+s16 real_speed;
+float	Speed_PID_Change(float target,s16 real_speed){
+	float Kp=5.1;
+	float Ki=4.3,Kd=0.045;
+	if(real_speed>1500)	return 1500;
+	error=target-real_speed;
 	if(n==1)Old_error=0;
 	if(n==2)Old_error=error;
-	Output=((float)real)+Kp*((float)error)+Ki*(((float)Old_error)+((float)error))+Kd*(((float)error)-((float)Old_error));
+	Output=Kp*((float)error)+Ki*(((float)Old_error)+((float)error))+Kd*(((float)error)-((float)Old_error));
 	n=2;
-	if(Output>1500)return 1000;
-	if(Output<-1500)return -1000;
+	if(Output>3000)return 2500;
+	if(Output<-3000)return -2500;
 	else return Output;
 }
-void Motor_Send_analysis(void)
+float Location_PID_Change(void)
+{
+	float angle_Kp=1,angle_Ki=0.001,angle_Kd=10;
+	s16 target_location=3000,target_real_value=3000;
+	angle_error=target_real_value-Motor_base.motor_angle;
+	Out_Speed=angle_Kp*((float)angle_error)+angle_Ki*(((float)angle_old_error)+((float)angle_error))+angle_Kd*(((float)angle_error)-((float)angle_old_error));
+	angle_old_error=angle_error;
+	return Out_Speed;
+}
+void Motor_Speed_Send_analysis(void)
 {
 	u8 p;
-	s16 final_Output;
-	final_Output=(s16)PID_Change();
-	Send[0]=(final_Output>>8);
-	Send[1]=final_Output;
+	s16 final_Speed_Output;
+	float final_angle;
+	final_angle=Location_PID_Change();
+	final_Speed_Output=(s16)Speed_PID_Change(final_angle,Motor_base.motor_speed);
+	Send[0]=(final_Speed_Output>>8);
+	Send[1]=final_Speed_Output;
 	for(p=2;p<8;p++)
 	Send[p]=0;
 }
@@ -129,7 +144,7 @@ void TIM3_IRQHandler(void)
 {
 	if(TIM_GetITStatus(TIM3,TIM_IT_Update)==SET) //溢出中断
 	{
-		Motor_Send_analysis();
+		Motor_Speed_Send_analysis();
 		CAN1_Send_Msg(Send,8);
 	}
 	TIM_ClearITPendingBit(TIM3,TIM_IT_Update);  //清除中断标志位

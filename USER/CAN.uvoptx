@@ -216,12 +216,12 @@
         <Ww>
           <count>5</count>
           <WinNumber>1</WinNumber>
-          <ItemText>Output,0x0A</ItemText>
+          <ItemText>Out_Speed</ItemText>
         </Ww>
         <Ww>
           <count>6</count>
           <WinNumber>1</WinNumber>
-          <ItemText>error,0x0A</ItemText>
+          <ItemText>angle_error,0x0A</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
